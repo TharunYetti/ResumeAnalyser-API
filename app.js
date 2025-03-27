@@ -28,12 +28,10 @@ app.use(cookieParser());
 const authRouter = require("./src/routes/auth");
 const resumeRouter = require("./src/routes/resume");
 const userRouter = require("./src/routes/user");
-const imageRouter = require("./src/routes/image");
 
 app.use("/",authRouter);
 app.use("/resume", resumeRouter);
 app.use("/user", userRouter);
-app.use("/image",imageRouter);
 
 connectDB().then(() => {
   console.log("Database connected");
