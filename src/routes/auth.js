@@ -73,7 +73,7 @@ authRouter.post("/signup", async (req, res) => {
 
 
   authRouter.post('/googlelogin', async (req, res) => {
-    const { emailId,fullName } = req.body;
+    const { emailId,firstName, lastName } = req.body;
 
 
     console.log(req.body);
@@ -85,9 +85,10 @@ authRouter.post("/signup", async (req, res) => {
         if (!user) {
           console.log("Creating new Google user...");
           user = await User.create({
-              fullName,
+              firstName,
+              lastName,
               emailId,
-              password: null, 
+              password: "googleLogin", 
           });
       }
 
