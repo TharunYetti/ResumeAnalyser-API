@@ -1,7 +1,6 @@
+//node version used 20.18.0
 const express = require("express");
 const app = express();
-
-
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const connectDB = require("./src/config/database");
