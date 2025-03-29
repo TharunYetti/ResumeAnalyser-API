@@ -3,9 +3,9 @@ const { OpenAI } = require("openai");
 const fs = require("fs");
 const path = require("path");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 
 // Converts local file to base64 format
 function fileToBase64(filePath) {

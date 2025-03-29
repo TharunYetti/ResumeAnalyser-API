@@ -4,80 +4,153 @@ const Resume = require("../models/Resume");
 const User = require("../models/User");
 const { analyzeResume } = require("../utils/resumeAnalyzer");
 const authMiddleware = require("../middleware/authMiddleware");
+const uploadToDrive = require("../utils/googleDrive");
 
 const router = express.Router();
 // Configure Multer to store files in memory (not in a folder)
-const storage = multer.memoryStorage(); // Store file in RAM instead of disk
-const upload = multer({ storage: storage });
+// const storage = multer.memoryStorage();  Store file in RAM instead of disk
+// const upload = multer({ storage: storage });
+const upload=multer();
+
+// router.post("/analyze", upload.single("resume"), authMiddleware, async (req, res) => {
+//     console.log("Request received at /resume/analyze"); // Debugging
+//   try {
+//     const { userId } = req.user; // Extract from token middleware
+//     console.log("userId",userId);
+//     const resumeFile = req.file;
+
+//     const jobDescription = req.body.jobDescription;
+
+
+//     if (!resumeFile) return res.status(400).json({ error: "No file uploaded" });
+
+//     // Extract mimetype and file buffer
+//     const mimeType = resumeFile.mimetype;  // Example: "application/pdf"
+//     const fileBuffer = resumeFile.buffer;  // File data in memory
+//     console.log(mimeType, fileBuffer);
+//     // Analyze Resume
+//     const result = await analyzeResume(fileBuffer, mimeType, jobDescription);
+
+//     console.log("Type of result:", typeof result);
+//     console.log("Type of result.analysis:", typeof result.analysis);
+//     // console.log("Full result:", result);
+//     // console.log("Full result:", result.analysis);
+
+//     // console.log(result.analysis);
+//     // Save to DB
+
+//     console.log(typeof result.extractedText);
+//     console.log(typeof result.analysis);
+//     console.log(typeof result.analysis.score);
+//     console.log(typeof result.analysis.missingKeywords);
+//     console.log(typeof result.analysis.suggestedJobs);
+//     console.log(typeof result.analysis.readabilityScore);
+//     console.log(typeof result.analysis.grammarIssues);
+//     console.log(typeof result.analysis.atsFriendly);
+//     console.log(typeof result.sectionScores);
+//     console.log(result.sectionScores);
+//     const newResume = new Resume({
+//       userId,
+//       file: resumeFile.buffer, // Store PDF as binary data
+//       contentType: resumeFile.mimetype, // Store MIME type
+//       extractedText: result.extractedText,
+//       analysis: result.analysis,
+//       score: result.analysis.score,
+//       missingKeywords: result.analysis.missingKeywords,
+//       suggestedJobs: result.analysis.suggestedJobs,
+//       readabilityScore: result.analysis.readabilityScore,
+//       grammarIssues: result.analysis.grammarIssues,
+//       atsFriendly: result.analysis.atsFriendly,
+//   });
+//   await newResume.save(); // Save to Resume collection
+
+//   // Update user's resumes array with new Resume ObjectId
+//   const user = await User.findByIdAndUpdate(
+//       userId,
+//       { $push: { resumes: newResume._id } }, // Store ObjectId in user's resumes array
+//       { new: true }
+//   );
+
+//   // console.log("for verification");
+//   // console.log(result.sectionScores);
+
+//   res.json({ message: "Resume added successfully", resume: newResume, sectionScores: result.sectionScores });
+//   } catch (error) {
+//     res.status(500).json({ error: "Error analyzing resume" });
+//   }
+// });
 
 
 router.post("/analyze", upload.single("resume"), authMiddleware, async (req, res) => {
-    console.log("Request received at /resume/analyze"); // Debugging
+  console.log("Request received at /resume/analyze");
+
   try {
-    const { userId } = req.user; // Extract from token middleware
-    console.log("userId",userId);
-    const resumeFile = req.file;
+      const { userId } = req.user;
+      console.log("userId:", userId);
 
-    const jobDescription = req.body.jobDescription;
+      const resumeFile = req.file;
+      if (!resumeFile) return res.status(400).json({ error: "No file uploaded" });
 
+      const jobDescription = req.body.jobDescription;
 
-    if (!resumeFile) return res.status(400).json({ error: "No file uploaded" });
+      // ✅ Step 1: Analyze Resume
+      console.log("Analyzing resume...");
+      let result;
+      try {
+          result = await analyzeResume(resumeFile.buffer, resumeFile.mimetype, jobDescription);
+          console.log("Analysis Result:", result);
+      } catch (error) {
+          console.error("Error in analyzeResume:", error);
+          return res.status(500).json({ error: "Error analyzing resume" });
+      }
 
-    // Extract mimetype and file buffer
-    const mimeType = resumeFile.mimetype;  // Example: "application/pdf"
-    const fileBuffer = resumeFile.buffer;  // File data in memory
-    console.log(mimeType, fileBuffer);
-    // Analyze Resume
-    const result = await analyzeResume(fileBuffer, mimeType, jobDescription);
+      // ✅ Step 2: Upload to Google Drive
+      console.log("Uploading to Google Drive...");
+      let fileUrl;
+      try {
+          fileUrl = await uploadToDrive(resumeFile);
+          console.log("File uploaded to Drive:", fileUrl);
+      } catch (error) {
+          console.error("Error in uploadToDrive:", error);
+          return res.status(500).json({ error: "Error uploading file to Google Drive" });
+      }
 
-    console.log("Type of result:", typeof result);
-    console.log("Type of result.analysis:", typeof result.analysis);
-    // console.log("Full result:", result);
-    // console.log("Full result:", result.analysis);
+      // ✅ Step 3: Save to Database
+      console.log("Saving to database...");
+      const newResume = new Resume({
+          userId,
+          file:fileUrl, // Storing Drive link
+          extractedText: result.extractedText,
+          analysis: result.analysis,
+          score: result.analysis.score,
+          missingKeywords: result.analysis.missingKeywords,
+          suggestedJobs: result.analysis.suggestedJobs,
+          readabilityScore: result.readabilityScore,
+          grammarIssues: result.grammarIssues,
+          atsFriendly: result.atsFriendly,
+      });
 
-    // console.log(result.analysis);
-    // Save to DB
+      await newResume.save();
+      console.log("Resume saved!");
 
-    console.log(typeof result.extractedText);
-    console.log(typeof result.analysis);
-    console.log(typeof result.analysis.score);
-    console.log(typeof result.analysis.missingKeywords);
-    console.log(typeof result.analysis.suggestedJobs);
-    console.log(typeof result.analysis.readabilityScore);
-    console.log(typeof result.analysis.grammarIssues);
-    console.log(typeof result.analysis.atsFriendly);
-    console.log(typeof result.sectionScores);
-    console.log(result.sectionScores);
-    const newResume = new Resume({
-      userId,
-      file: resumeFile.buffer, // Store PDF as binary data
-      contentType: resumeFile.mimetype, // Store MIME type
-      extractedText: result.extractedText,
-      analysis: result.analysis,
-      score: result.analysis.score,
-      missingKeywords: result.analysis.missingKeywords,
-      suggestedJobs: result.analysis.suggestedJobs,
-      readabilityScore: result.analysis.readabilityScore,
-      grammarIssues: result.analysis.grammarIssues,
-      atsFriendly: result.analysis.atsFriendly,
-  });
-  await newResume.save(); // Save to Resume collection
+      // ✅ Step 4: Update User's Resumes Array
+      await User.findByIdAndUpdate(
+          userId,
+          { $push: { resumes: newResume._id } },
+          { new: true }
+      );
 
-  // Update user's resumes array with new Resume ObjectId
-  const user = await User.findByIdAndUpdate(
-      userId,
-      { $push: { resumes: newResume._id } }, // Store ObjectId in user's resumes array
-      { new: true }
-  );
-
-  // console.log("for verification");
-  // console.log(result.sectionScores);
-
-  res.json({ message: "Resume added successfully", resume: newResume, sectionScores: result.sectionScores });
+      res.json({
+          message: "Resume uploaded, analyzed, and stored successfully",
+          resume: newResume,
+          sectionScores: result.sectionScores,
+      });
   } catch (error) {
-    res.status(500).json({ error: "Error analyzing resume" });
+      console.error("Unhandled Error in /analyze:", error);
+      res.status(500).json({ error: "Unexpected server error" });
   }
 });
+
 
 // added
 // Get statistics data
