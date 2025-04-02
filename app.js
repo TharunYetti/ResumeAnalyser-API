@@ -13,14 +13,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || "Internal Server Error" });
 });
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://resumify-client.vercel.app/"
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allow frontend origin
-    credentials: true, // Allow cookies and authentication headers
-    methods: ["GET", "PUT","POST", "PATCH", "DELETE", "OPTIONS"], // Explicitly allow PATCH
-    allowedHeaders: ["Content-Type", "Authorization"], // Ensure content-type is allowed
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(express.json()); // Middleware to parse JSON
 app.use(cookieParser());
 
