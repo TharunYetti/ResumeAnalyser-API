@@ -21,6 +21,7 @@ exports.signup = async (req, res) => {
       firstName,
       lastName,
       emailId,
+      role: "user",
       password: passwordHash,
     });
 
@@ -92,6 +93,7 @@ exports.googlelogin = async (req, res) => {
         firstName,
         lastName,
         emailId,
+        role: "user",
         password: "googleLogin",
       });
       await user.save(); // 🔹 Saves the new user to MongoDB
@@ -111,7 +113,7 @@ exports.googlelogin = async (req, res) => {
       expires: new Date(Date.now() + 8 * 3600000),
     });
 
-    res.send(user);
+    res.send({user:user, token:token});
   } catch (error) {
     console.error("Error during login:", error);
     console.log(error);
@@ -123,4 +125,46 @@ exports.logout = async (req, res) => {
     res.cookie("token", null, {
       expires: new Date(Date.now()),
     });
+  }
+
+  // For Registering Admin
+  exports.signupAdmin = async (req, res) => {
+    try {
+      console.log("came to Admin sign up!");
+      validateSignUpData(req);
+      console.log("Validation Successful!");
+      const { firstName, lastName, emailId, password } = req.body;
+      console.log("Parsed admin data:", firstName, lastName, emailId, password);
+  
+      const passwordHash = await bcrypt.hash(password, 10);
+  
+      const admin = new User({
+        firstName,
+        lastName,
+        emailId,
+        role: "admin",
+        password: passwordHash,
+      });
+  
+      const savedAdmin = await admin.save();
+  
+      const token = await jwt.sign(
+        { userId: savedAdmin._id, email: savedAdmin.emailId },
+        "RESUME@123",
+        {
+          expiresIn: "1d",
+        }
+      );
+  
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
+  
+      res
+        .status(201)
+        .json({ message: "Admin registered successfully", data: savedAdmin });
+    } catch (err) {
+      console.error("Error:", err.message);
+      res.status(400).send("Error: " + err.message);
+    }
   }
