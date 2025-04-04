@@ -67,12 +67,12 @@ exports.login = async (req, res) => {
         expiresIn: "1d",
       }
     );
-
+    console.log(token);
     res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
     });
 
-    res.send(user);
+    res.send({user:user, token:token});
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }

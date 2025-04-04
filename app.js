@@ -20,7 +20,7 @@ app.use((err, req, res, next) => {
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://resumify-client.vercel.app/"
+  "https://resumify-client.vercel.app"
 ];
 
 app.use(
