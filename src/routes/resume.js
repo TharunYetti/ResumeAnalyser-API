@@ -1,6 +1,8 @@
 const express = require("express");
 const multer = require("multer");
 const authMiddleware = require("../middleware/authMiddleware");
+const User = require("../models/User");
+const Resume = require("../models/Resume");
 
 const router = express.Router();
 // Configure Multer to store files
@@ -13,29 +15,29 @@ router.post("/analyse", upload.single("resume"), authMiddleware, ResumeControlle
 // Get statistics data
 router.get('/stats', ResumeController.stats);
 
-// GET all resumes
-router.get("/all", authMiddleware, async (req, res) => {
+// GET /all - Get all users with their last two resumes' links
+router.get("/all", async (req, res) => {
   try {
-    const resumes = await Resume.find()
-      .populate("userId", "firstName lastName emailId") // Correct field names
-      .exec();
+    // Fetch all users and populate resumes
+    const users = await User.find()
+      .populate({
+        path: "resumes",
+        select: "file createdAt",
+        options: { sort: { createdAt: -1 } }
+      });
 
-    const formattedResumes = resumes.map((resume) => ({
-      id: resume._id,
-      userName: resume.userId
-        ? `${resume.userId.firstName} ${resume.userId.lastName}`
-        : "Unknown User",
-      userEmail: resume.userId?.emailId || "No Email", // Use emailId
-      score: resume.score,
-      readabilityScore: resume.readabilityScore,
-      atsFriendly: resume.atsFriendly,
-      file: resume.file ? resume.file.toString("base64") : null,
+    // Map users to include only last two resume file links
+    const userData = users.map(user => ({
+      userId: user._id,
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.emailId,
+      lastTwoResumeLinks: user.resumes.slice(0, 2).map(r => r.file)
     }));
 
-    res.json({ resumes: formattedResumes });
-  } catch (error) {
-    console.error("Error fetching resumes:", error);
-    res.status(500).json({ error: "Error fetching resumes" });
+    res.status(200).json(userData);
+  } catch (err) {
+    console.error("Error fetching users and resumes:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
