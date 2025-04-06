@@ -44,7 +44,7 @@ async function analyzeResume(fileBuffer, mimeType, jobRole) {
         - **grammarIssues**: Brief message if there are any grammar mistakes.
         - **atsFriendly**: Whether the resume is ATS-friendly ('true' or 'false').
         - **detailedDescription**: End-to-end summary of the resume.
-      -And lastly rate the section wise score out of 10 for each secion in the resume. 
+      -And lastly rate the section wise score out of 100 for each secion in the resume. 
 
       Resume:
       """${resumeText}"""
