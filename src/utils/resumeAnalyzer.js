@@ -40,11 +40,11 @@ async function analyzeResume(fileBuffer, mimeType, jobRole) {
         - **score**: Represents ATS score.
         - **missingKeywords**: Keywords missed in the resume to make it effective.
         - **suggestedJobs**: Related jobs for the given resume.
-        - **readabilityScore**: Represents readability of the resume.
+        - **readabilityScore**: Represents readability of the resume (Always give it above 50).
         - **grammarIssues**: Brief message if there are any grammar mistakes.
         - **atsFriendly**: Whether the resume is ATS-friendly ('true' or 'false').
         - **detailedDescription**: End-to-end summary of the resume.
-      -And lastly rate the section wise score out of 100 for each secion in the resume. 
+      -And lastly rate the section wise score out of 100 for each secion in the resume with the key sectionWiseScore. 
 
       Resume:
       """${resumeText}"""
@@ -53,7 +53,7 @@ async function analyzeResume(fileBuffer, mimeType, jobRole) {
     // Dynamically import Google Generative AI
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
     const result = await model.generateContent([prompt]);
     const analysis = result.response.text();
@@ -71,7 +71,7 @@ async function analyzeResume(fileBuffer, mimeType, jobRole) {
         const parsedData = JSON.parse(duplicateResponse);
     
         // Extract sectionScores safely
-        sectionScores = parsedData.sectionScores || {};
+        sectionScores = parsedData.sectionWiseScore || {};
         console.log(parsedData);
         final_analysis = parsedData;
     } catch (error) {
@@ -85,7 +85,7 @@ async function analyzeResume(fileBuffer, mimeType, jobRole) {
     return {
       extractedText: resumeText,
       analysis: final_analysis,
-      score: Math.floor(Math.random() * 50) + 50, // Randomized score (50-100)
+      score: final_analysis.score, // Randomized score (50-100)
       atsFriendly: analysis.toLowerCase().includes("ats friendly"),
       sectionScores,
      

@@ -27,7 +27,9 @@ router.get("/all", async (req, res) => {
       });
 
     // Map users to include only last two resume file links
-    const userData = users.map(user => ({
+    const userData = users
+    .filter(user => user.role !== 'admin')
+    .map(user => ({
       userId: user._id,
       name: `${user.firstName} ${user.lastName}`,
       email: user.emailId,
