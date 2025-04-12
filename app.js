@@ -10,6 +10,7 @@ const session = require("express-session");
 const authRouter = require("./src/routes/auth");
 const resumeRouter = require("./src/routes/resume");
 const userRouter = require("./src/routes/user");
+const PORT = process.env.PORT || 3000 ;
 
 require("dotenv").config();
 
@@ -40,8 +41,8 @@ app.use(
 
 connectDB().then(() => {
   console.log("Database connected");
-  app.listen(7777, () => {
-    console.log("Server started on http://localhost:7777");
+  app.listen(PORT , () => {
+    console.log(`Server started on port ${PORT}`);
   });
 }).catch((err)=>{
     console.error("Database cannot be connected...!!", err.message);
