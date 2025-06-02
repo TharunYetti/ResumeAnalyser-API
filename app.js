@@ -1,4 +1,5 @@
 //node version used 20.18.0
+require('dotenv').config();
 const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
@@ -10,7 +11,7 @@ const session = require("express-session");
 const authRouter = require("./src/routes/auth");
 const resumeRouter = require("./src/routes/resume");
 const userRouter = require("./src/routes/user");
-const PORT = process.env.PORT || 3000 ;
+const PORT = process.env.PORT || 3000;
 
 require("dotenv").config();
 

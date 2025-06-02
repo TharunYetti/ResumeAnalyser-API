@@ -8,10 +8,11 @@ const writeFile = util.promisify(fs.writeFile);
 const unlinkFile = util.promisify(fs.unlink);
 
 // Google Drive Authentication
-const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+// const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+// console.log("Google Service Account Credentials:", credentials);
 const auth = new google.auth.GoogleAuth({
-    // keyFile: path.join(__dirname, "../../service-account.json"), // Ensure correct path
-    credentials,
+    keyFile: path.join(__dirname, "service-account.json"), // Ensure correct path
+    // credentials,
     scopes: ["https://www.googleapis.com/auth/drive.file"],
 });
 
