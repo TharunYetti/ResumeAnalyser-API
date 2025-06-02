@@ -5,7 +5,7 @@ const uploadToDrive = require("../utils/googleDrive");
 
 exports.analyse = async (req, res) => {
   console.log("Request received at /resume/analyze");
-
+ 
   try {
       const { userId } = req.user;
       console.log("userId:", userId);
@@ -40,17 +40,18 @@ exports.analyse = async (req, res) => {
       // ✅ Step 3: Save to Database
       console.log("Saving to database...");
       const newResume = new Resume({
-          userId,
-          file:fileUrl, // Storing Drive link
-          extractedText: result.extractedText,
-          analysis: result.analysis,
-          score: result.analysis.score,
-          missingKeywords: result.analysis.missingKeywords,
-          suggestedJobs: result.analysis.suggestedJobs,
-          readabilityScore: result.readabilityScore,
-          grammarIssues: result.grammarIssues,
-          atsFriendly: result.atsFriendly,
+        userId,
+        file: fileUrl, // Storing Drive link
+        extractedText: result.resumeText,
+        analysis: result, // store the whole analysis if needed
+        score: result.score,
+        missingKeywords: result.missingKeywords,
+        suggestedJobs: result.suggestedJobs,
+        readabilityScore: result.readabilityScore,
+        grammarIssues: result.grammarIssues,
+        atsFriendly: result.atsFriendly,
       });
+      
 
       await newResume.save();
       console.log("Resume saved!");
