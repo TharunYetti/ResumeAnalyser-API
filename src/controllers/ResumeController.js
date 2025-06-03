@@ -50,6 +50,10 @@ exports.analyse = async (req, res) => {
         readabilityScore: result.readabilityScore,
         grammarIssues: result.grammarIssues,
         atsFriendly: result.atsFriendly,
+        personalInfo: result.personalInfo,
+        education: result.education,
+        experience: result.experience,
+        skills: result.skills,
       });
       
 
@@ -62,11 +66,11 @@ exports.analyse = async (req, res) => {
           { $push: { resumes: newResume._id } },
           { new: true }
       );
-
+      console.log("New resume:", newResume)
       res.json({
           message: "Resume uploaded, analyzed, and stored successfully",
-          resume: newResume,
-          sectionScores: result.sectionScores,
+          resume: newResume.toObject(),
+          sectionScores: result.sectionWiseScore,
       });
   } catch (error) {
       console.error("Unhandled Error in /analyze:", error);
