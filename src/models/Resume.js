@@ -12,6 +12,14 @@ const ResumeSchema = new mongoose.Schema({
   grammarIssues: String, // List of grammar/spelling mistakes
   detailedDescription: String,
   atsFriendly: { type: String, default: true }, // Whether resume passes ATS check
+  personalInfo: { type: mongoose.Schema.Types.Mixed, default: {} },
+  education: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  experience: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  skills: {
+    technicalSkills: { type: [String], default: [] },
+    softSkills: { type: [String], default: [] },
+    tools: { type: [String], default: [] }
+  },
   createdAt: { type: Date, default: Date.now }
 });
 
